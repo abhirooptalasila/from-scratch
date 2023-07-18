@@ -96,26 +96,22 @@ def test_eq(a: float) -> None:
 # that ensure that your operators obey basic
 # mathematical rules.
 
-def strictly_increasing(L):
-    return all(x<y for x, y in zip(L, L[1:]))
-
 
 @pytest.mark.task0_2
 @given(small_floats)
 def test_sigmoid(a: float) -> None:
-    assert 0.0 <= sigmoid(a) <= 1.0
-    assert 1 - sigmoid(a) == sigmoid(-a)
-    assert sigmoid(0.0) == 0.5
-
-    sample_ops = [sigmoid(x) for x in range(-10.0, 10.0, 1.0)]
-    assert strictly_increasing(sample_ops)
-
+    assert sigmoid(a) >= 0.0
+    assert sigmoid(a) <= 1.0
+    assert_close(sigmoid(-a), 1.0 - sigmoid(a))
+    assert_close(sigmoid(0), 0.5)
+    assert sigmoid(a) >= sigmoid(a - 0.1)
 
 
 @pytest.mark.task0_2
 @given(small_floats, small_floats, small_floats)
 def test_transitive(a: float, b: float, c: float) -> None:
-    assert lt(a, b) and lt(b, c) == lt(a, c)
+    if a < b and b < c:
+        assert lt(a, c)
 
 
 @pytest.mark.task0_2
@@ -157,12 +153,7 @@ def test_zip_with(a: float, b: float, c: float, d: float) -> None:
     lists(small_floats, min_size=5, max_size=5),
 )
 def test_sum_distribute(ls1: List[float], ls2: List[float]) -> None:
-    """
-    Write a test that ensures that the sum of `ls1` plus the sum of `ls2`
-    is the same as the sum of each element of `ls1` plus each element of `ls2`.
-    """
-    # TODO: Implement for Task 0.3.
-    raise NotImplementedError('Need to implement for Task 0.3')
+    assert_close(sum(ls1) + sum(ls2), sum(ls1 + ls2))
 
 
 @pytest.mark.task0_3

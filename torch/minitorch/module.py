@@ -47,7 +47,6 @@ class Module:
             for mod_name, mod_param in module.named_parameters():
                 res.append((name + "." + mod_name, mod_param))
         return res
-    
 
     def parameters(self) -> Sequence[Parameter]:
         return [m for _, m in self.named_parameters()]
