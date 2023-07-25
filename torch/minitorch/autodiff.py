@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Iterable, List, Tuple
+from typing import Any, Iterable, Tuple
 
 from typing_extensions import Protocol
 
@@ -22,8 +22,10 @@ def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) 
     Returns:
         An approximation of $f'_i(x_0, \ldots, x_{n-1})$
     """
-    # TODO: Implement for Task 1.1.
-    raise NotImplementedError("Need to implement for Task 1.1")
+    return (
+        f(*vals[:arg], vals[arg] + epsilon, *vals[arg + 1 :])
+        - f(*vals[:arg], vals[arg] - epsilon, *vals[arg + 1 :])
+    ) / (2 * epsilon)
 
 
 variable_count = 1
@@ -61,8 +63,26 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+
+    PermanentMarked = []
+    TemporaryMarked = []
+    result = []
+
+    def visit(n: Variable):
+        if n.is_constant() or n.unique_id in PermanentMarked:
+            return
+        if n.unique_id in TemporaryMarked:
+            raise RuntimeError("not a dag")
+        TemporaryMarked.append(n.unique_id)
+        if not n.is_leaf():
+            for input in n.parents:
+                visit(input)
+        TemporaryMarked.remove(n.unique_id)
+        PermanentMarked.append(n.unique_id)
+        result.insert(0, n)
+
+    visit(variable)
+    return result
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -76,8 +96,18 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+    order = topological_sort(variable)
+    derivs = {variable.unique_id: deriv}
+    for node in order:
+        d_output = derivs[node.unique_id]
+        if node.is_leaf():
+            node.accumulate_derivative(d_output)
+        else:
+            for input, d in node.chain_rule(d_output):
+                if input.unique_id not in derivs:
+                    derivs[input.unique_id] = 0.0
+                derivs[input.unique_id] += d
+    return
 
 
 @dataclass
